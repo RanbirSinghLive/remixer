@@ -8,16 +8,3 @@ A content remixing tool using React.
 4. See the remix in an output box
 5. Add other styling and features that we want as we go
 
-## Tech Stack
-
-1. React
-2. Tailwind CSS
-3. Vercel 
-4. OpenAI API 
-
-## Challenges
-
-1. And another AI API
-2. Add a way to upload audio files to have transcribed
-3. Click to tweet or to schedule a tweet from the output
-4. Add a way to save the remix output to a database 
