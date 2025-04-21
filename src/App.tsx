@@ -1,22 +1,57 @@
 import React, { useState } from 'react';
 import { ArrowPathIcon } from '@heroicons/react/24/outline';
+import OpenAI from 'openai';
+
+// Initialize OpenAI client
+const openai = new OpenAI({
+  apiKey: process.env.REACT_APP_OPENAI_API_KEY,
+  dangerouslyAllowBrowser: true // Only for client-side usage
+});
 
 function App() {
   const [inputText, setInputText] = useState('');
   const [outputText, setOutputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleRemix = async () => {
+    if (!inputText.trim()) return;
+    
     setIsLoading(true);
+    setError(null);
+    
     try {
-      console.log('Remixing text:', inputText);
-      // Simulate API call
-      setTimeout(() => {
-        setOutputText('This is a simulated remix of your text. API integration coming soon!');
-        setIsLoading(false);
-      }, 1000);
+      console.log('Starting remix process...');
+      
+      const completion = await openai.chat.completions.create({
+        model: "gpt-3.5-turbo",
+        messages: [
+          {
+            role: "system",
+            content: "You are a creative content remixer. Your task is to take the input text and remix it in an interesting, engaging way while maintaining the core message. Be creative but professional."
+          },
+          {
+            role: "user",
+            content: inputText
+          }
+        ],
+        temperature: 0.7,
+        max_tokens: 1000,
+      });
+
+      console.log('API Response:', completion);
+      
+      const remixedText = completion.choices[0]?.message?.content;
+      if (!remixedText) {
+        throw new Error('No response from AI');
+      }
+      
+      setOutputText(remixedText);
     } catch (error) {
-      console.error('Error remixing text:', error);
+      console.error('Error in remix process:', error);
+      setError(error instanceof Error ? error.message : 'An unexpected error occurred');
+      setOutputText('');
+    } finally {
       setIsLoading(false);
     }
   };
@@ -49,9 +84,9 @@ function App() {
                 <div className="flex justify-center mb-6">
                   <button
                     onClick={handleRemix}
-                    disabled={isLoading || !inputText}
+                    disabled={isLoading || !inputText.trim()}
                     className={`flex items-center px-6 py-3 border border-transparent text-sm font-medium rounded-lg text-white shadow-lg transition-all duration-200 ${
-                      isLoading || !inputText
+                      isLoading || !inputText.trim()
                         ? 'bg-gray-400 cursor-not-allowed'
                         : 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 transform hover:scale-105'
                     }`}
@@ -66,6 +101,12 @@ function App() {
                     )}
                   </button>
                 </div>
+
+                {error && (
+                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
+                    {error}
+                  </div>
+                )}
 
                 <div className="transition-all duration-300 hover:scale-[1.01]">
                   <label className="block text-sm font-medium text-gray-700 mb-2">Output</label>
